@@ -1,6 +1,7 @@
 import random, time
 import openpyxl
 import numpy as  np
+from array import array
 
 
 class Gacha():
@@ -39,20 +40,21 @@ class Gacha():
         # 範囲
         range_size = 20
         
-        ranges = [range_size * (x + 1) for x in range(label_size)]
+        ranges = array("i", [range_size * (x + 1) for x in range(label_size)])
         labels = [f"{range_size * x + 1} ~ {range_size * x + range_size}" for x in range(label_size)] + [f"{(label_size) * range_size + 1} ~ "]
         gacha_time = {label: 0 for label in labels}
         
         max = 0
         min = label_size * range_size
         average = 0
-        count_list = []
+        count_list = array("i", [])
+        print("Pull time to get first item")
         for i in range(gacha_count):
             count = self.first_get_count()
             count_list.append(count)
             average += count
             if i % 100 == 0:
-                print(f"\r{int(i / (gacha_count / 100))}% 完了", end="")
+                print(f"\r{int(i / (gacha_count / 100))}% completed", end="")
             # 最大値
             if count > max:
                 max = count
@@ -71,6 +73,18 @@ class Gacha():
         print("\r100% 完了\n")
         # 試行回数の辞書、最大試行回数、最小試行回数、中央値、平均値
         return gacha_time, max, min, median, average
+    
+    def budget_gacha(self, gacha_count, continuous, ten_time_gacha):
+        get = 0
+        print("予算ガチャ")
+        for i in range(gacha_count):
+            win = self.virtual_gacha(ten_time_gacha, continuous)
+            if win != 0:
+                get += 1
+            print(f"\r{int(i  / (gacha_count / 100)):.1f}% 完了", end="")
+        print("\r100% 完了\n")
+        budget_get_rate = get / gacha_count * 100
+        return budget_get_rate
 
 
 def export_to_excel(result_list, file_name="gacha_results.xlsx"):
@@ -109,9 +123,15 @@ def main():
     # 仮想ガチャ、各回の0, 1 生成回数、x 連ガチャ
     continuous = 10
     # 試行回数
-    gacha_count = 10000
+    gacha_count = 100000
     # 確率 x %
-    rate = 3
+    rate = 0.4
+    # 課金額 円
+    budget = 20000
+    # 1連の単価 円
+    cost = 300
+    # 10連を回せる回数
+    ten_time_gacha = int(budget / (cost * 10))
     
     gacha = Gacha(rate)
 
@@ -124,8 +144,8 @@ def main():
     
     print(f"当たり確率 {rate}% のガチャの試行")
     total_rate = 0
-    cumulative_rate_list = []
-    each_rate_list = []
+    cumulative_rate_list = array("f", [])
+    each_rate_list = array("f", [])
     for k, v in average_result_dict.items():
         x = v /gacha_count * 100
         total_rate += x
@@ -137,7 +157,8 @@ def main():
     print(f"中央値      : {median:>6}回")
     print(f"平均値      : {average_rate:>6.2f}回")
     print(f"最大試行回数: {max:>6}回")
-    print(f"最小試行回数: {min:>6}回")
+    print(f"最小試行回数: {min:>6}回\n")
+    print(f"\n{budget}円課金した場合、あたりを引ける確率は")
     
     # 試行時の確率、結果の辞書、最大試行回数、最小、中央値、平均、各確率、累積確率
     to_excel_list = [
