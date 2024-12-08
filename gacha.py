@@ -48,7 +48,7 @@ class Gacha():
         min = label_size * range_size
         average = 0
         count_list = array("i", [])
-        print("Pull time to get first item")
+        print("Pull times until getting item first")
         for i in range(gacha_count):
             count = self.first_get_count()
             count_list.append(count)
@@ -70,19 +70,19 @@ class Gacha():
                 gacha_time[labels[-1]] += 1
         median = np.median(count_list)
         average /= gacha_count
-        print("\r100% 完了\n")
+        print("\r100% 完了      ")
         # 試行回数の辞書、最大試行回数、最小試行回数、中央値、平均値
         return gacha_time, max, min, median, average
     
-    def budget_gacha(self, gacha_count, continuous, ten_time_gacha):
+    def budget_gacha(self, gacha_count, number_of_gacha):
         get = 0
         print("予算ガチャ")
         for i in range(gacha_count):
-            win = self.virtual_gacha(ten_time_gacha, continuous)
+            win = self.virtual_gacha(gacha_count=1, continuous=number_of_gacha)
             if win != 0:
                 get += 1
-            print(f"\r{int(i  / (gacha_count / 100)):.1f}% 完了", end="")
-        print("\r100% 完了\n")
+            print(f"\r{int(i  / (gacha_count / 100))}% 完了", end="")
+        print("\r100% 完了    \n")
         budget_get_rate = get / gacha_count * 100
         return budget_get_rate
 
@@ -125,13 +125,13 @@ def main():
     # 試行回数
     gacha_count = 100000
     # 確率 x %
-    rate = 0.4
+    rate = 88
     # 課金額 円
-    budget = 20000
+    budget = 10000
     # 1連の単価 円
     cost = 300
-    # 10連を回せる回数
-    ten_time_gacha = int(budget / (cost * 10))
+    # ガチャを回せる回数
+    number_of_gacha = int(budget / cost)
     
     gacha = Gacha(rate)
 
@@ -139,6 +139,7 @@ def main():
 
     rate_result = gacha.gacha_rate(gacha_count, continuous)
     average_result_dict, max, min, median, average_rate = gacha.average_first_count(gacha_count)
+    budget_gacha_rate = gacha.budget_gacha(gacha_count, number_of_gacha)
 
     end = time.time()
     
@@ -158,7 +159,7 @@ def main():
     print(f"平均値      : {average_rate:>6.2f}回")
     print(f"最大試行回数: {max:>6}回")
     print(f"最小試行回数: {min:>6}回\n")
-    print(f"\n{budget}円課金した場合、あたりを引ける確率は")
+    print(f"\n{budget}円課金した場合（{number_of_gacha}連）、{budget_gacha_rate:.2f}%で入手")
     
     # 試行時の確率、結果の辞書、最大試行回数、最小、中央値、平均、各確率、累積確率
     to_excel_list = [
