@@ -146,7 +146,7 @@ def main():
 
     end = time.time()
     
-    print(f"当たり確率 {rate}% のガチャの試行 / Roll a gacha with {rate}% chance of winning")
+    print(f"{rate}% の当たり確率で最初にあたりを引くまでに回した回数 / Number of times until winning (gacha with a {rate}% chance of winning)")
     total_rate = 0
     cumulative_rate_list = array("f", [])
     each_rate_list = array("f", [])
@@ -155,8 +155,8 @@ def main():
         total_rate += x
         cumulative_rate_list.append(total_rate)
         each_rate_list.append(x)
-        print(f"{k:^10} 連 / Rolls: {v:>8} 回 / times: {total_rate:>6.2f}%")
-    print(f"\n試行時の確率 / Rate                    : {rate_result:>6.2f}%")
+        print(f"{k:^10} 連 / Rolls: {v:>8} 回 / times: {total_rate:>6.2f} %")
+    print(f"\n試行時の確率 / Rate                    : {rate_result:>6.2f} %")
     print(f"試行回数 / Number of trials            : {gacha_count:>6} 回 / times")
     print(f"中央値 / Median                        : {median:>6} 回 / times")
     print(f"平均値 / Average                       : {average_rate:>6.2f} 回 / times")
@@ -170,12 +170,12 @@ def main():
     while i < 3:
         get = budget_gacha_rate_list.count(i)
         get_rate = get / len(budget_gacha_rate_list) * 100
-        print(f"{i:^6}: {get:>6} 回/times: {get_rate:>6.2f}%")
+        print(f"{i:^6}: {get:>6} 回/times: {get_rate:>6.2f} %")
         total += get
         i += 1
     get = len(budget_gacha_rate_list) - total
     get_rate = get / len(budget_gacha_rate_list) * 100
-    print(f"  {i} ~ : {get:>6} 回/times: {get_rate:>6.2f}%")
+    print(f"  {i} ~ : {get:>6} 回/times: {get_rate:>6.2f} %")
         
     
     # 試行時の確率、結果の辞書、最大試行回数、最小、中央値、平均、各確率、累積確率
