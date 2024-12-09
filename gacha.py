@@ -9,8 +9,8 @@ class Gacha():
         self.rate = [rate, 100 - rate]
         self.gacha_list = [1, 0]
     
-    # continuous 連ガチャをgacha_count 回引いた時の確立
-    def virtual_gacha(self, gacha_count, continuous):
+    # 仮想ガチャ、continuous 連をgacha_count回行う
+    def virtual_gacha(self, gacha_count, continuous=1):
         num = 0
         for _ in range(gacha_count):
             result = random.choices(self.gacha_list, k=continuous, weights=self.rate)
@@ -18,12 +18,14 @@ class Gacha():
         
         return num
     
-    def gacha_rate(self, gacha_count, continuous):
-        win = self.virtual_gacha(gacha_count, continuous)
-        rate = win / (gacha_count * continuous) * 100
+    # ガチャの確率を求める
+    def gacha_rate(self, gacha_count):
+        win = self.virtual_gacha(gacha_count)
+        rate = win / gacha_count * 100
         
         return rate
     
+    # 初めてあたりを引けるまで行うガチャ
     def first_get_count(self):
         get_count = 0
         result = 0
@@ -34,7 +36,8 @@ class Gacha():
         
         return get_count
     
-    def average_first_count(self, gacha_count):
+    # 初めてあたりを引くことをgacha_cont 回行う
+    def rate_first_get(self, gacha_count):
         # 範囲の個数
         label_size = 15
         # 範囲
@@ -48,7 +51,7 @@ class Gacha():
         min = label_size * range_size
         average = 0
         count_list = array("i", [])
-        print("Pull times until getting item first")
+        print("\n初めて獲得するまで / Until getting item first")
         for i in range(gacha_count):
             count = self.first_get_count()
             count_list.append(count)
@@ -70,21 +73,23 @@ class Gacha():
                 gacha_time[labels[-1]] += 1
         median = np.median(count_list)
         average /= gacha_count
-        print("\r100% 完了      ")
+        print("\r100% completed      ")
         # 試行回数の辞書、最大試行回数、最小試行回数、中央値、平均値
         return gacha_time, max, min, median, average
     
+    # 課金額以内で当たりを引ける確率
     def budget_gacha(self, gacha_count, number_of_gacha):
         get = 0
-        print("予算ガチャ")
+        get = array("i", [])
+        print("\n課金 / Budget Gacha")
+        # number_of_gacha 連をgacha_count 回引く
         for i in range(gacha_count):
             win = self.virtual_gacha(gacha_count=1, continuous=number_of_gacha)
-            if win != 0:
-                get += 1
-            print(f"\r{int(i  / (gacha_count / 100))}% 完了", end="")
-        print("\r100% 完了    \n")
-        budget_get_rate = get / gacha_count * 100
-        return budget_get_rate
+            get.append(win)
+            print(f"\r{int(i  / (gacha_count / 100))}% completed", end="")
+
+        print("\r100% completed    \n")
+        return get
 
 
 def export_to_excel(result_list, file_name="gacha_results.xlsx"):
@@ -120,51 +125,63 @@ def export_to_excel(result_list, file_name="gacha_results.xlsx"):
 
 
 def main():
-    # 仮想ガチャ、各回の0, 1 生成回数、x 連ガチャ
-    continuous = 10
-    # 試行回数
+    # 試行回数 / Number of trials
     gacha_count = 100000
-    # 確率 x %
-    rate = 88
-    # 課金額 円
+    # 確率 / Rate (rate %)
+    rate = 0.4
+    # 課金額 / Budget (budget yen)
     budget = 10000
-    # 1連の単価 円
+    # 1連の単価 / Cost of one roll 
     cost = 300
-    # ガチャを回せる回数
+    # ガチャを回せる回数 / Number of time rolling gacha within budget
     number_of_gacha = int(budget / cost)
     
     gacha = Gacha(rate)
 
     start = time.time()
 
-    rate_result = gacha.gacha_rate(gacha_count, continuous)
-    average_result_dict, max, min, median, average_rate = gacha.average_first_count(gacha_count)
-    budget_gacha_rate = gacha.budget_gacha(gacha_count, number_of_gacha)
+    rate_result = gacha.gacha_rate(gacha_count)
+    rate_result_dict, max, min, median, average_rate = gacha.rate_first_get(gacha_count)
+    budget_gacha_rate_list = gacha.budget_gacha(gacha_count, number_of_gacha)
 
     end = time.time()
     
-    print(f"当たり確率 {rate}% のガチャの試行")
+    print(f"当たり確率 {rate}% のガチャの試行 / Roll a gacha with {rate}% chance of winning")
     total_rate = 0
     cumulative_rate_list = array("f", [])
     each_rate_list = array("f", [])
-    for k, v in average_result_dict.items():
-        x = v /gacha_count * 100
+    for k, v in rate_result_dict.items():
+        x = v / gacha_count * 100
         total_rate += x
         cumulative_rate_list.append(total_rate)
         each_rate_list.append(x)
-        print(f"{k:^10}連: {v:>8}回: {total_rate:>6.2f}%")
-    print(f"\n試行時の確率: {rate_result:>6.2f}%")
-    print(f"試行回数    : {gacha_count:>6}回")
-    print(f"中央値      : {median:>6}回")
-    print(f"平均値      : {average_rate:>6.2f}回")
-    print(f"最大試行回数: {max:>6}回")
-    print(f"最小試行回数: {min:>6}回\n")
-    print(f"\n{budget}円課金した場合（{number_of_gacha}連）、{budget_gacha_rate:.2f}%で入手")
+        print(f"{k:^10} 連 / Rolls: {v:>8} 回 / times: {total_rate:>6.2f}%")
+    print(f"\n試行時の確率 / Rate                    : {rate_result:>6.2f}%")
+    print(f"試行回数 / Number of trials            : {gacha_count:>6} 回 / times")
+    print(f"中央値 / Median                        : {median:>6} 回 / times")
+    print(f"平均値 / Average                       : {average_rate:>6.2f} 回 / times")
+    print(f"最大試行回数 / Maximum number of trials: {max:>6} 回 / times")
+    print(f"最小試行回数 / Minimum number of trials: {min:>6} 回 / times\n")
+    
+    i = 0
+    total = 0
+    print(f"\n{budget}円課金した場合（{number_of_gacha}連) / When charging {budget}yen ({number_of_gacha} rolls)")
+    print("獲得数:      獲得回数  : パーセンテージ/ Number of wins: Number of times: Percentage")
+    while i < 3:
+        get = budget_gacha_rate_list.count(i)
+        get_rate = get / len(budget_gacha_rate_list) * 100
+        print(f"{i:^6}: {get:>6} 回/times: {get_rate:>6.2f}%")
+        total += get
+        i += 1
+    get = len(budget_gacha_rate_list) - total
+    get_rate = get / len(budget_gacha_rate_list) * 100
+    print(f"  {i} ~ : {get:>6} 回/times: {get_rate:>6.2f}%")
+        
     
     # 試行時の確率、結果の辞書、最大試行回数、最小、中央値、平均、各確率、累積確率
     to_excel_list = [
         rate_result,
-        average_result_dict,
+        rate_result_dict,
         max,
         min,
         median,
@@ -172,12 +189,13 @@ def main():
         each_rate_list,
         cumulative_rate_list,
         ]
-        
-    export_to_excel(to_excel_list)
+    
+    # Excelに書き込み 
+    # export_to_excel(to_excel_list)
     
     
     time_diff = end - start
-    print(f"\n{time_diff}s")
+    print(f"\n{time_diff:.4f} seconds")
 
 
 if __name__ == "__main__":
