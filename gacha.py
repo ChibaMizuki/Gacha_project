@@ -51,7 +51,7 @@ class Gacha():
         min = label_size * range_size
         average = 0
         count_list = array("i", [])
-        print("\n初めて獲得するまで / Until getting item first")
+        print("\n初めて獲得するまで / Roll a gacha until getting item first")
         for i in range(gacha_count):
             count = self.first_get_count()
             count_list.append(count)
@@ -126,11 +126,11 @@ def export_to_excel(result_list, file_name="gacha_results.xlsx"):
 
 def main():
     # 試行回数 / Number of trials
-    gacha_count = 100000
+    gacha_count = 10000
     # 確率 / Rate (rate %)
-    rate = 0.4
+    rate = 0.1
     # 課金額 / Budget (budget yen)
-    budget = 10000
+    budget = 20000
     # 1連の単価 / Cost of one roll 
     cost = 300
     # ガチャを回せる回数 / Number of time rolling gacha within budget
@@ -151,11 +151,11 @@ def main():
     cumulative_rate_list = array("f", [])
     each_rate_list = array("f", [])
     for k, v in rate_result_dict.items():
-        x = v / gacha_count * 100
-        total_rate += x
+        each_rate = v / gacha_count * 100
+        total_rate += each_rate
         cumulative_rate_list.append(total_rate)
-        each_rate_list.append(x)
-        print(f"{k:^10} 連 / Rolls: {v:>8} 回 / times: {total_rate:>6.2f} %")
+        each_rate_list.append(each_rate)
+        print(f"{k:^10} 連 / Rolls: {v:>8} 回 / times: {each_rate:>6.2f} %: {total_rate:>6.2f} %")
     print(f"\n試行時の確率 / Rate                    : {rate_result:>6.2f} %")
     print(f"試行回数 / Number of trials            : {gacha_count:>6} 回 / times")
     print(f"中央値 / Median                        : {median:>6} 回 / times")
@@ -198,5 +198,6 @@ def main():
     print(f"\n{time_diff:.4f} seconds")
 
 
+# test
 if __name__ == "__main__":
     main()
