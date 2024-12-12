@@ -198,6 +198,5 @@ def main():
     print(f"\n{time_diff:.4f} seconds")
 
 
-# test
 if __name__ == "__main__":
     main()
