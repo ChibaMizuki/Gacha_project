@@ -1,4 +1,4 @@
-import random, time
+import random, time, math
 import openpyxl
 import numpy as  np
 from array import array
@@ -9,19 +9,19 @@ class Gacha():
         self.rate = [rate, 100 - rate]
         self.gacha_list = [1, 0]
     
-    # 仮想ガチャ、continuous 連をgacha_count回行う
-    def virtual_gacha(self, gacha_count, continuous=1):
+    # 仮想ガチャ、continuous 連をnumber_of_trials回行う
+    def virtual_gacha(self, number_of_trials, continuous=1):
         num = 0
-        for _ in range(gacha_count):
+        for _ in range(number_of_trials):
             result = random.choices(self.gacha_list, k=continuous, weights=self.rate)
             num += result.count(1)
         
         return num
     
     # ガチャの確率を求める
-    def gacha_rate(self, gacha_count):
-        win = self.virtual_gacha(gacha_count)
-        rate = win / gacha_count * 100
+    def gacha_rate(self, number_of_trials):
+        win = self.virtual_gacha(number_of_trials)
+        rate = win / number_of_trials * 100
         
         return rate
     
@@ -37,7 +37,7 @@ class Gacha():
         return get_count
     
     # 初めてあたりを引くことをgacha_cont 回行う
-    def rate_first_get(self, gacha_count):
+    def rate_first_get(self, number_of_trials):
         # 範囲の個数
         label_size = 15
         # 範囲
@@ -52,12 +52,12 @@ class Gacha():
         average = 0
         count_list = array("i", [])
         print("\n初めて獲得するまで / Roll a gacha until getting item first")
-        for i in range(gacha_count):
+        for i in range(number_of_trials):
             count = self.first_get_count()
             count_list.append(count)
             average += count
             if i % 100 == 0:
-                print(f"\r{int(i / (gacha_count / 100))}% completed", end="")
+                print(f"\r{int(i / (number_of_trials / 100))}% completed", end="")
             # 最大値
             if count > max:
                 max = count
@@ -72,21 +72,21 @@ class Gacha():
             else:
                 gacha_time[labels[-1]] += 1
         median = np.median(count_list)
-        average /= gacha_count
+        average /= number_of_trials
         print("\r100% completed      ")
         # 試行回数の辞書、最大試行回数、最小試行回数、中央値、平均値
         return gacha_time, max, min, median, average
     
     # 課金額以内で当たりを引ける確率
-    def budget_gacha(self, gacha_count, number_of_gacha):
+    def budget_gacha(self, number_of_trials, number_of_gacha):
         get = 0
         get = array("i", [])
         print("\n課金 / Budget Gacha")
-        # number_of_gacha 連をgacha_count 回引く
-        for i in range(gacha_count):
-            win = self.virtual_gacha(gacha_count=1, continuous=number_of_gacha)
+        # number_of_gacha 連をnumber_of_trials 回引く
+        for i in range(number_of_trials):
+            win = self.virtual_gacha(number_of_trials=1, continuous=number_of_gacha)
             get.append(win)
-            print(f"\r{int(i  / (gacha_count / 100))}% completed", end="")
+            print(f"\r{int(i  / (number_of_trials / 100))}% completed", end="")
 
         print("\r100% completed    \n")
         return get
@@ -126,11 +126,11 @@ def export_to_excel(result_list, file_name="gacha_results.xlsx"):
 
 def main():
     # 試行回数 / Number of trials
-    gacha_count = 10000
+    number_of_trials = 10000
     # 確率 / Rate (rate %)
-    rate = 0.1
+    rate = float(input("確率 / Rate (%): "))
     # 課金額 / Budget (budget yen)
-    budget = 20000
+    budget = int(input("課金額（円） / Budget (yen): "))
     # 1連の単価 / Cost of one roll 
     cost = 300
     # ガチャを回せる回数 / Number of time rolling gacha within budget
@@ -140,9 +140,9 @@ def main():
 
     start = time.time()
 
-    rate_result = gacha.gacha_rate(gacha_count)
-    rate_result_dict, max, min, median, average_rate = gacha.rate_first_get(gacha_count)
-    budget_gacha_rate_list = gacha.budget_gacha(gacha_count, number_of_gacha)
+    rate_result = gacha.gacha_rate(number_of_trials)
+    rate_result_dict, max, min, median, average_rate = gacha.rate_first_get(number_of_trials)
+    budget_gacha_rate_list = gacha.budget_gacha(number_of_trials, number_of_gacha)
 
     end = time.time()
     
@@ -151,13 +151,13 @@ def main():
     cumulative_rate_list = array("f", [])
     each_rate_list = array("f", [])
     for k, v in rate_result_dict.items():
-        each_rate = v / gacha_count * 100
+        each_rate = v / number_of_trials * 100
         total_rate += each_rate
         cumulative_rate_list.append(total_rate)
         each_rate_list.append(each_rate)
         print(f"{k:^10} 連 / Rolls: {v:>8} 回 / times: {each_rate:>6.2f} %: {total_rate:>6.2f} %")
     print(f"\n試行時の確率 / Rate                    : {rate_result:>6.2f} %")
-    print(f"試行回数 / Number of trials            : {gacha_count:>6} 回 / times")
+    print(f"試行回数 / Number of trials            : {number_of_trials:>6} 回 / times")
     print(f"中央値 / Median                        : {median:>6} 回 / times")
     print(f"平均値 / Average                       : {average_rate:>6.2f} 回 / times")
     print(f"最大試行回数 / Maximum number of trials: {max:>6} 回 / times")
@@ -165,17 +165,21 @@ def main():
     
     i = 0
     total = 0
+    total_theory = 0
     print(f"\n{budget}円課金した場合（{number_of_gacha}連) / When charging {budget}yen ({number_of_gacha} rolls)")
-    print("獲得数:      獲得回数  : パーセンテージ/ Number of wins: Number of times: Percentage")
+    print("獲得数:      獲得回数  :     確率  :  理論値 / Number of wins: times: Percentage: Theoretical rate: Theoretical value")
     while i < 3:
         get = budget_gacha_rate_list.count(i)
         get_rate = get / len(budget_gacha_rate_list) * 100
-        print(f"{i:^6}: {get:>6} 回/times: {get_rate:>6.2f} %")
+        theory = ((100 - rate) / 100) ** (number_of_gacha - i) * (rate / 100) ** i * math.comb(number_of_gacha, i) * 100
+        # theory = (0.996 ** 65) * (0.004 ** 1 * 66) * 100
+        print(f"{i:^6}: {get:>6} 回/times: {get_rate:>8.2f} %: {theory:>6.2f} %")
         total += get
+        total_theory += theory
         i += 1
     get = len(budget_gacha_rate_list) - total
     get_rate = get / len(budget_gacha_rate_list) * 100
-    print(f"  {i} ~ : {get:>6} 回/times: {get_rate:>6.2f} %")
+    print(f"  {i} ~ : {get:>6} 回/times: {get_rate:>8.2f} %: {100 - total_theory:>6.2f} %")
         
     
     # 試行時の確率、結果の辞書、最大試行回数、最小、中央値、平均、各確率、累積確率
