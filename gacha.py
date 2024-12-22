@@ -93,40 +93,54 @@ class Gacha():
 
 
 def export_to_excel(result_list, file_name="gacha_results.xlsx"):
-    # 新しいExcelワークブックを作成
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Gacha Results"
-
+    try:
+        # 既存のExcelファイルを開く
+        wb = openpyxl.load_workbook(file_name)
+        print(f"Existing file '{file_name}' loaded successfully.")
+    except FileNotFoundError:
+        # ファイルが存在しない場合は新しいファイルを作成
+        wb = openpyxl.Workbook()
+        print(f"File '{file_name}' not found. Creating a new file.")
+    
+    # シートをリセットまたは新規作成
+    if "Gacha Results" in wb.sheetnames:
+        ws = wb["Gacha Results"]
+        ws.delete_rows(1, ws.max_row)  # 既存データを削除
+        print(f"Sheet 'Gacha Results' reset.")
+    else:
+        ws = wb.create_sheet("Gacha Results")
+        print(f"New sheet 'Gacha Results' created.")
+    
     # データを書き込み
     ws.append(["Virtual Gacha Result"])
-    # [0]
     ws.append(["確率", "", result_list[0]])
-    # [5]
     ws.append(["平均試行回数", "", f"{result_list[5]}連"])
-    # [4]
     ws.append(["中央値", "", f"{result_list[4]}連"])
-    # [3]
     ws.append(["最小試行回数", "", f"{result_list[3]}連"])
-    # [2]
     ws.append(["最大試行回数", "", f"{result_list[2]}連"])
-    ws.append([])  # 空行
+    ws.append([])
 
-    ws.append(["Range", "Count", "rate", "comulative"])
+    ws.append(["Budget Gacha Result"])
+    ws.append(["獲得数", "獲得回数", "確率"])
+    for i in range(len(result_list[8])):
+        ws.append([f"{i}体", result_list[8][i]])
+    ws.append([])
+
+    ws.append(["Range", "Count times", "rate %", "comulative %"])
     i = 0
-    # [1], [6], [7]
     for k, v in result_list[1].items():
         ws.append([k, v, result_list[6][i], result_list[7][i]])
         i += 1
 
-    # ファイル保存
+    # ファイルを保存
     wb.save(file_name)
-    print(f"\nResults saved to {file_name}")
+    print(f"Results saved to '{file_name}'.")
+
 
 
 def main():
     # 試行回数 / Number of trials
-    number_of_trials = 10000
+    number_of_trials = 100000
     # 確率 / Rate (rate %)
     rate = float(input("確率 / Rate (%): "))
     # 課金額 / Budget (budget yen)
@@ -166,10 +180,12 @@ def main():
     i = 0
     total = 0
     total_theory = 0
-    print(f"\n{budget}円課金した場合（{number_of_gacha}連) / When charging {budget}yen ({number_of_gacha} rolls)")
+    get_list = []
+    print(f"\n{budget}円課金した場合（{number_of_gacha}連×{number_of_gacha}回) / When charging {budget}yen ({number_of_gacha} rolls * {number_of_trials} times)")
     print("獲得数:      獲得回数  :     確率  :  理論値 / Number of wins: times: Percentage: Theoretical rate: Theoretical value")
     while i < 3:
         get = budget_gacha_rate_list.count(i)
+        get_list.append(get)
         get_rate = get / len(budget_gacha_rate_list) * 100
         theory = ((100 - rate) / 100) ** (number_of_gacha - i) * (rate / 100) ** i * math.comb(number_of_gacha, i) * 100
         # theory = (0.996 ** 65) * (0.004 ** 1 * 66) * 100
@@ -179,6 +195,7 @@ def main():
         i += 1
     get = len(budget_gacha_rate_list) - total
     get_rate = get / len(budget_gacha_rate_list) * 100
+    get_list.append(get)
     print(f"  {i} ~ : {get:>6} 回/times: {get_rate:>8.2f} %: {100 - total_theory:>6.2f} %")
         
     
@@ -192,10 +209,11 @@ def main():
         average_rate,
         each_rate_list,
         cumulative_rate_list,
+        get_list
         ]
     
     # Excelに書き込み 
-    # export_to_excel(to_excel_list)
+    export_to_excel(to_excel_list)
     
     
     time_diff = end - start
