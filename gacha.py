@@ -140,7 +140,7 @@ def export_to_excel(result_list, file_name="gacha_results.xlsx"):
 
 def main():
     # 試行回数 / Number of trials
-    number_of_trials = 100000
+    number_of_trials = 52
     # 確率 / Rate (rate %)
     rate = float(input("確率 / Rate (%): "))
     # 課金額 / Budget (budget yen)
@@ -180,15 +180,16 @@ def main():
     i = 0
     total = 0
     total_theory = 0
+    probability = 0
     get_list = []
-    print(f"\n{budget}円課金した場合（{number_of_gacha}連×{number_of_gacha}回) / When charging {budget}yen ({number_of_gacha} rolls * {number_of_trials} times)")
+    print(f"\n{budget}円課金した場合（{number_of_gacha}連×{number_of_trials}回) / When charging {budget}yen ({number_of_gacha} rolls * {number_of_trials} times)")
     print("獲得数:      獲得回数  :     確率  :  理論値 / Number of wins: times: Percentage: Theoretical rate: Theoretical value")
     while i < 3:
         get = budget_gacha_rate_list.count(i)
         get_list.append(get)
         get_rate = get / len(budget_gacha_rate_list) * 100
         theory = ((100 - rate) / 100) ** (number_of_gacha - i) * (rate / 100) ** i * math.comb(number_of_gacha, i) * 100
-        # theory = (0.996 ** 65) * (0.004 ** 1 * 66) * 100
+        probability += i * get
         print(f"{i:^6}: {get:>6} 回/times: {get_rate:>8.2f} %: {theory:>6.2f} %")
         total += get
         total_theory += theory
@@ -197,6 +198,9 @@ def main():
     get_rate = get / len(budget_gacha_rate_list) * 100
     get_list.append(get)
     print(f"  {i} ~ : {get:>6} 回/times: {get_rate:>8.2f} %: {100 - total_theory:>6.2f} %")
+    
+    probability += i * get
+    print(f"\nProbability: {probability / (number_of_gacha * number_of_trials) * 100:.3}%\n")
         
     
     # 試行時の確率、結果の辞書、最大試行回数、最小、中央値、平均、各確率、累積確率
