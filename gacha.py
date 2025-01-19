@@ -5,11 +5,13 @@ from array import array
 
 
 class Gacha():
+    # 0 is lose, 1 is win
     def __init__(self, rate):
         self.rate = [rate, 100 - rate]
         self.gacha_list = [1, 0]
     
     # 仮想ガチャ、continuous 連をnumber_of_trials回行う
+    # count how many times 1 appear
     def virtual_gacha(self, number_of_trials, continuous=1):
         num = 0
         for _ in range(number_of_trials):
@@ -19,6 +21,7 @@ class Gacha():
         return num
     
     # ガチャの確率を求める
+    # calculate the probability
     def gacha_rate(self, number_of_trials):
         win = self.virtual_gacha(number_of_trials)
         rate = win / number_of_trials * 100
@@ -26,6 +29,7 @@ class Gacha():
         return rate
     
     # 初めてあたりを引けるまで行うガチャ
+    # Other experiment
     def first_get_count(self):
         get_count = 0
         result = 0
@@ -37,6 +41,7 @@ class Gacha():
         return get_count
     
     # 初めてあたりを引くことをgacha_cont 回行う
+    # Other experiment
     def rate_first_get(self, number_of_trials):
         # 範囲の個数
         label_size = 15
@@ -78,6 +83,7 @@ class Gacha():
         return gacha_time, max, min, median, average
     
     # 課金額以内で当たりを引ける確率
+    # calculate the probability of winning within budget
     def budget_gacha(self, number_of_trials, number_of_gacha):
         get = 0
         get = array("i", [])
@@ -92,6 +98,7 @@ class Gacha():
         return get
 
 
+# Function to export to Excel
 def export_to_excel(result_list, file_name="gacha_results.xlsx"):
     try:
         # 既存のExcelファイルを開く
@@ -140,7 +147,7 @@ def export_to_excel(result_list, file_name="gacha_results.xlsx"):
 
 def main():
     # 試行回数 / Number of trials
-    number_of_trials = 52
+    number_of_trials = int(input("試行回数 / Number of trials"))
     # 確率 / Rate (rate %)
     rate = float(input("確率 / Rate (%): "))
     # 課金額 / Budget (budget yen)
@@ -160,6 +167,7 @@ def main():
 
     end = time.time()
     
+    print("-" * 50 + "Other experiment" + "-" * 50)
     print(f"{rate}% の当たり確率で最初にあたりを引くまでに回した回数 / Number of times until winning (gacha with a {rate}% chance of winning)")
     total_rate = 0
     cumulative_rate_list = array("f", [])
@@ -176,7 +184,10 @@ def main():
     print(f"平均値 / Average                       : {average_rate:>6.2f} 回 / times")
     print(f"最大試行回数 / Maximum number of trials: {max:>6} 回 / times")
     print(f"最小試行回数 / Minimum number of trials: {min:>6} 回 / times\n")
+    print("-" * 110)
     
+    
+    # Try the "number_of_trials" times whether the character is pulled or not within th ebudget
     i = 0
     total = 0
     total_theory = 0
@@ -217,7 +228,7 @@ def main():
         ]
     
     # Excelに書き込み 
-    export_to_excel(to_excel_list)
+    # export_to_excel(to_excel_list)
     
     
     time_diff = end - start
