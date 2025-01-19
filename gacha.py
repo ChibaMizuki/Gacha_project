@@ -147,7 +147,7 @@ def export_to_excel(result_list, file_name="gacha_results.xlsx"):
 
 def main():
     # 試行回数 / Number of trials
-    number_of_trials = int(input("試行回数 / Number of trials"))
+    number_of_trials = int(input("試行回数 / Number of trials: "))
     # 確率 / Rate (rate %)
     rate = float(input("確率 / Rate (%): "))
     # 課金額 / Budget (budget yen)
